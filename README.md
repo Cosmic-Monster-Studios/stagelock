@@ -257,7 +257,7 @@ Every rule has `type` and `requires`. Inside `actions`, **everything is blocked 
 
 | Action | Values | Default | Blocks |
 |---|---|---|---|
-| `pickup` | boolean | `true` | Picking the item up from the ground. If `hold` isn't `allow`, pickup is blocked too, whatever this says. |
+| `pickup` | boolean | `true` | Picking the item up from the ground. If `hold` isn't `allow`, pickup is blocked too, whatever this says. The `pickupAnyItem` setting overrides both. |
 | `use` | boolean | `true` | Right-click on air, blocks and entities, plus eating, drinking, bows and shields. |
 | `place` | boolean | `true` | Placing the item as a block. |
 | `attack` | boolean | `true` | Hitting entities while holding it. |
@@ -693,6 +693,7 @@ A padlock icon marks locked items everywhere items render.
 | `stages` | `strictStages` | `false` | Reject rules that use undefined stages (only once definitions exist). |
 | `items` | `restrictedToolMining` | `BARE_HAND` | Mining with a locked tool: `BARE_HAND` (hand speed) or `DENY` (no mining). |
 | `items` | `inventoryRescanTicks` | `20` | Inventories are rechecked whenever they change, and also fully this often. That catches `/give` and mods that write slots directly. `0` turns the periodic check off. |
+| `items` | `pickupAnyItem` | `false` | Let players pick up and carry every locked item, ignoring each rule's `pickup` and `hold`. Every other action stays locked. |
 | `world` | `evictOnLogin` | `true` | Move players who log in inside a locked dimension to spawn. |
 | `viewers` | `recipeHiding` | `SLOT` | Which recipe viewer entries a hidden item takes with it: `SLOT`, `STRICT` or `OUTPUT` (see [above](#what-hiding-an-item-hides-in-recipe-viewers)). |
 | `recipes` | `automationPolicy` | `OWNER` | Machines with no player present: `OWNER` (the placer's stages), `ALLOW` or `DENY`. |
