@@ -1,5 +1,6 @@
 package dev.stagelock.core.config;
 
+import dev.stagelock.api.restriction.ItemAction;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public final class ServerConfig {
     public static final ModConfigSpec.BooleanValue STRICT_STAGES;
     public static final ModConfigSpec.EnumValue<ToolMining> RESTRICTED_TOOL_MINING;
     public static final ModConfigSpec.IntValue INVENTORY_RESCAN_TICKS;
+    public static final ModConfigSpec.BooleanValue PICKUP_ANY_ITEM;
     public static final ModConfigSpec.BooleanValue EVICT_ON_LOGIN;
     public static final ModConfigSpec.EnumValue<AutomationPolicy> AUTOMATION_POLICY;
     public static final ModConfigSpec.EnumValue<Policy> UNOWNED_POLICY;
@@ -66,6 +68,10 @@ public final class ServerConfig {
                 .comment("Inventories are rechecked whenever they change. Items inserted without marking the inventory changed",
                         "(/give, some mods) are caught by a full recheck every this many ticks. 0 disables the periodic recheck.")
                 .defineInRange("inventoryRescanTicks", 20, 0, 20 * 60);
+        PICKUP_ANY_ITEM = builder
+                .comment("Players may pick up and carry any locked item, whatever its rules say about \"pickup\" and \"hold\".",
+                        "Every other action (use, place, equip, ...) stays blocked until the item unlocks.")
+                .define("pickupAnyItem", false);
         builder.pop();
 
         builder.push("world");
@@ -108,6 +114,16 @@ public final class ServerConfig {
     }
 
     private ServerConfig() {
+    }
+
+    /** Whether every locked item may be picked up and kept in the inventory (config {@code items.pickupAnyItem}). */
+    public static boolean pickupAnyItem() {
+        return SPEC.isLoaded() && PICKUP_ANY_ITEM.get();
+    }
+
+    /** Whether {@code action} is never blocked for items because of {@link #pickupAnyItem()}. */
+    public static boolean ignoresItemAction(ItemAction action) {
+        return (action == ItemAction.PICKUP || action == ItemAction.HOLD) && pickupAnyItem();
     }
 
     /** What a hidden item or fluid hides along with it in recipe viewers. */

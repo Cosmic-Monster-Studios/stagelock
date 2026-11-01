@@ -27,6 +27,8 @@ public final class Restrictions {
     @Nullable
     public static RestrictionManager.Entry<ItemRestriction> item(Player player, ItemStack stack, @Nullable ItemAction action) {
         if (stack.isEmpty() || isExempt(player)) return null;
+        // items.pickupAnyItem: picking up and carrying are always allowed, so the item never bounces back out.
+        if (action != null && ServerConfig.ignoresItemAction(action)) return null;
         return RestrictionManager.of(player).items().find(stack, StageLockAPI.getStages(player), action);
     }
 

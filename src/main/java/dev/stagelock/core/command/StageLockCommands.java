@@ -18,6 +18,7 @@ import dev.stagelock.api.restriction.ItemRestriction;
 import dev.stagelock.core.enforce.Restrictions;
 import dev.stagelock.core.restriction.RestrictionManager;
 import dev.stagelock.core.config.CommonConfig;
+import dev.stagelock.core.config.ServerConfig;
 import dev.stagelock.core.definition.StageDefinitions;
 import dev.stagelock.core.stage.StageManager;
 import dev.stagelock.core.tools.GameStagesImport;
@@ -242,6 +243,7 @@ public final class StageLockCommands {
         // When several locked rules match, the strictest decides each action; show which one that is.
         Map<ResourceLocation, List<String>> decided = new java.util.LinkedHashMap<>();
         for (ItemAction action : ItemAction.values()) {
+            if (ServerConfig.ignoresItemAction(action)) continue;
             var hit = RestrictionManager.server().items().find(stack, stages, action);
             if (hit == null) continue;
             String name = action.name().toLowerCase(Locale.ROOT);
