@@ -1,6 +1,7 @@
 package dev.stagelock.network;
 
 import dev.stagelock.client.ClientStageCache;
+import dev.stagelock.client.MobDiscoveries;
 import dev.stagelock.core.definition.StageDefinitions;
 import dev.stagelock.core.restriction.RestrictionManager;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -21,5 +22,8 @@ public final class StageLockNetwork {
                 (payload, context) -> RestrictionManager.client().setRules(payload.rules()));
         registrar.playToClient(SyncDefinitionsPayload.TYPE, SyncDefinitionsPayload.STREAM_CODEC,
                 (payload, context) -> StageDefinitions.client().set(payload.definitions()));
+        // Optional, so an older client or server can still connect; mob loot pages are then never hidden.
+        registrar.optional().playToClient(SyncDiscoveredMobsPayload.TYPE, SyncDiscoveredMobsPayload.STREAM_CODEC,
+                (payload, context) -> MobDiscoveries.apply(payload.replace(), payload.mobs()));
     }
 }

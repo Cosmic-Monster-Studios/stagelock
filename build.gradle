@@ -75,6 +75,8 @@ neoForge {
 
 configurations {
     runtimeClasspath.extendsFrom localRuntime
+    // Loot mods whose entry classes StageLock reads reflectively. Never on a classpath: a unit test reads the jars.
+    lootMods { transitive = false }
 }
 
 dependencies {
@@ -104,12 +106,19 @@ dependencies {
         localRuntime "dev.architectury:architectury-neoforge:${architectury_version}"
     }
 
+    lootMods "maven.modrinth:just-enough-resources-jer:${jer_version}"
+    lootMods "maven.modrinth:emi-loot:${emi_loot_version}"
+    lootMods "maven.modrinth:advanced-loot-info:${ali_version}"
+
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 test {
     useJUnitPlatform()
+    var lootModJars = configurations.lootMods
+    inputs.files(lootModJars)
+    doFirst { systemProperty 'stagelock.lootMods', lootModJars.asPath }
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

@@ -28,7 +28,8 @@ import java.util.Map;
 /**
  * EMI has no runtime hide/unhide API, so stacks and recipes are filtered while EMI loads plugins, and a
  * stage change asks EMI to reload. Any recipe that shows a hidden stack is filtered too (see {@link SlotRule}),
- * as are categories whose workstations are all hidden.
+ * as are categories whose workstations are all hidden, and the loot pages of mobs the player has yet to kill
+ * when the server asks for that.
  */
 @EmiEntrypoint
 public final class StageLockEmiPlugin implements EmiPlugin {
@@ -52,13 +53,15 @@ public final class StageLockEmiPlugin implements EmiPlugin {
         ViewerCategories.register("EMI", () -> EmiApi.getRecipeManager().getCategories().stream().map(EmiRecipeCategory::getId).toList(),
                 id -> REMOVED.getOrDefault(id, 0));
         REMOVED.clear();
-        if (!ViewerState.hidesEntries()) return;
-        registry.removeEmiStacks(StageLockEmiPlugin::isHidden);
+        boolean entries = ViewerState.hidesEntries();
+        boolean mobs = ViewerState.hidesMobEntries();
+        if (!entries && !mobs) return;
+        if (entries) registry.removeEmiStacks(StageLockEmiPlugin::isHidden);
         ServerConfig.RecipeHiding mode = ViewerState.recipeHiding();
         // Recipe filters run while EMI bakes, after every plugin has registered its workstations.
         Map<EmiRecipeCategory, Boolean> hiddenCategories = new HashMap<>();
         registry.removeRecipes(recipe -> {
-            if (!isRecipeHidden(recipe, mode, hiddenCategories)) return false;
+            if (!(entries && isRecipeHidden(recipe, mode, hiddenCategories)) && !(mobs && ViewerState.isMobEntryHidden(recipe))) return false;
             if (recipe.getCategory() != null) REMOVED.merge(recipe.getCategory().getId(), 1, Integer::sum);
             return true;
         });

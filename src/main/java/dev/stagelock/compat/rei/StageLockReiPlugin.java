@@ -29,8 +29,8 @@ import java.util.WeakHashMap;
 
 /**
  * Hides locked items through a REI filtering rule (re-evaluated via {@code markDirty}), and locked
- * recipes, displays that show a hidden entry (see {@link SlotRule}) and categories through visibility
- * predicates (evaluated live by REI).
+ * recipes, displays that show a hidden entry (see {@link SlotRule}), loot pages of mobs the player has
+ * yet to kill (when the server asks for that) and categories through visibility predicates (evaluated live by REI).
  */
 @REIPluginClient
 public final class StageLockReiPlugin implements REIClientPlugin {
@@ -83,8 +83,12 @@ public final class StageLockReiPlugin implements REIClientPlugin {
 
     /** REI asks again and again while browsing, so answers are kept until the hidden set changes. */
     private static boolean isDisplayHidden(Display display) {
-        if (!ViewerState.hidesEntries()) return false;
+        boolean entries = ViewerState.hidesEntries();
+        boolean mobs = ViewerState.hidesMobEntries();
+        if (!entries && !mobs) return false;
         return DISPLAYS.computeIfAbsent(display, d -> {
+            if (mobs && ViewerState.isMobEntryHidden(d)) return true;
+            if (!entries) return false;
             if (d.getDisplayLocation().filter(ViewerState::isRecipeHidden).isPresent()) return true;
             List<EntryIngredient> slots = new ArrayList<>(d.getInputEntries());
             slots.addAll(d.getOutputEntries());
