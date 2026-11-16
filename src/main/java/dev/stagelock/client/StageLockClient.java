@@ -26,6 +26,7 @@ public final class StageLockClient {
         container.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
         NeoForge.EVENT_BUS.addListener(ClientPlayerNetworkEvent.LoggingOut.class, event -> {
             ClientStageCache.reset();
+            MobDiscoveries.reset();
             RestrictionManager.client().setRules(Map.of());
             StageDefinitions.client().set(Map.of());
         });

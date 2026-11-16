@@ -10,6 +10,7 @@ import dev.stagelock.compat.ftbteams.FtbTeamsCompat;
 import dev.stagelock.compat.kubejs.KubeJSCompat;
 import dev.stagelock.core.StageLockRegistries;
 import dev.stagelock.core.definition.StageDefinitionHooks;
+import dev.stagelock.core.discovery.MobDiscovery;
 import dev.stagelock.core.definition.StageDefinitionLoader;
 import dev.stagelock.core.definition.StageDefinitions;
 import dev.stagelock.core.enforce.InventoryScanner;
@@ -127,6 +128,7 @@ public final class StageLock {
         ItemEnforcer.register(bus);
         InventoryScanner.register(bus);
         WorldEnforcer.register(bus);
+        MobDiscovery.register(bus);
     }
 
     public static ResourceLocation id(String path) {

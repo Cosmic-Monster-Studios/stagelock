@@ -21,6 +21,7 @@ Rules lock content until the player has the required stages:
 
 The server enforces every rule. The client mirrors the same rules, so nothing flickers on screen. JEI, REI
 and EMI hide locked content, including every viewer entry that would show it, and bring it back as soon as it unlocks.
+They can also keep each mob's loot page hidden until the player has killed that mob.
 
 ---
 
@@ -423,6 +424,30 @@ config `viewers.recipeHiding` decides how far this goes:
 A category is hidden as a whole when every one of its workstations is hidden (for example, all of a mod's
 furnace blocks), except in `OUTPUT` mode.
 
+### Mob loot pages that appear after the first kill
+
+Set `viewers.mobLootDiscovery = true` in `stagelock-server.toml` and a mob's loot page stays hidden until the
+player has killed that mob once. No rules or stages are needed.
+
+- Kills come from the player's vanilla statistics (*Statistics → Mobs*). Nothing extra is saved, mobs killed
+  before the option was turned on already count, and each player discovers mobs on their own.
+- The page appears a moment after the kill. In EMI that is a reload of EMI, as with any stage change.
+- Exempt players (creative mode by default, see [who is exempt](#who-is-exempt)) see every page.
+- Mobs in the entity type tag `#stagelock:loot_always_shown` are never hidden. Use it for mobs players should
+  know from the start, or that can't be killed.
+
+It recognises the mob pages of these mods, in each viewer they support:
+
+| Loot mod | JEI | REI | EMI |
+|---|---|---|---|
+| Just Enough Resources | ✔ | | |
+| EMI Loot | | | ✔ |
+| Advanced Loot Info | ✔ | ✔ | ✔ |
+
+Without one of them the option does nothing. Only mob drops are covered: villager trade pages and chest or
+block loot pages are left alone (hide those tabs with [`stagelock:viewer_category`](#stagelockviewer_category)
+if you need to). `/stagelock_categories` counts the hidden mob pages in each category.
+
 ---
 
 ## KubeJS
@@ -669,6 +694,7 @@ All are optional.
 |---|---|
 | KubeJS | Everything in the [KubeJS](#kubejs) section above. |
 | JEI, REI, EMI | Locked items, fluids and recipes with `viewer: hide` are removed, along with every entry that shows them (see [what hiding an item hides](#what-hiding-an-item-hides-in-recipe-viewers)), and come back the moment they unlock. `stagelock:viewer_category` hides whole categories. Packs whose rules are all `show` never trigger a viewer refresh. |
+| Just Enough Resources, EMI Loot, Advanced Loot Info | With `viewers.mobLootDiscovery` on, a mob's loot page appears [after the player's first kill](#mob-loot-pages-that-appear-after-the-first-kill) of that mob. |
 | FTB Teams | Party teams are used for team-scope stages. |
 | FTB Quests | Stage tasks and rewards, through KubeJS stages (FTB XMod Compat). |
 | Curios | Locked items can't be equipped in curio slots, and are taken out when a stage is revoked. |
@@ -696,6 +722,7 @@ A padlock icon marks locked items everywhere items render.
 | `items` | `pickupAnyItem` | `false` | Let players pick up and carry every locked item, ignoring each rule's `pickup` and `hold`. Every other action stays locked. |
 | `world` | `evictOnLogin` | `true` | Move players who log in inside a locked dimension to spawn. |
 | `viewers` | `recipeHiding` | `SLOT` | Which recipe viewer entries a hidden item takes with it: `SLOT`, `STRICT` or `OUTPUT` (see [above](#what-hiding-an-item-hides-in-recipe-viewers)). |
+| `viewers` | `mobLootDiscovery` | `false` | Hide each mob's loot page in recipe viewers until the player has killed that mob once (see [above](#mob-loot-pages-that-appear-after-the-first-kill)). |
 | `recipes` | `automationPolicy` | `OWNER` | Machines with no player present: `OWNER` (the placer's stages), `ALLOW` or `DENY`. |
 | `recipes` | `unownedPolicy` | `ALLOW` | With `OWNER`: machines that have no owner. |
 | `recipes` | `contextlessPolicy` | `ALLOW` | Recipe lookups from other mods with no player or owner: `ALLOW` or `DENY`. |
@@ -727,6 +754,7 @@ A padlock icon marks locked items everywhere items render.
 | A definition's id isn't what you expected | Without `"id"`, a file at `data/mypack/stagelock/stages/iron_age.json` defines `mypack:iron_age`, not `iron_age`. |
 | An item obtained a different way bypasses its lock | Lock the recipe as well (`craft` or `stagelock:recipe`), and gate loot with the `stagelock:has_stage` loot condition. |
 | A locked item still shows up in some JEI/REI/EMI page | It sits in a slot next to visible options. Set `viewers.recipeHiding` to `STRICT`, or hide the whole category with `stagelock:viewer_category`. |
+| A mob's loot page is still visible with `mobLootDiscovery` on | You are in creative mode, you already killed that mob (check *Statistics → Mobs*), or the page comes from a loot mod StageLock doesn't recognise. If the log says `Could not read the mob of ... loot entries`, that loot mod changed in an update; please report it. |
 | Automation still crafts locked recipes | Machines use their owner's stages. Other mods' machines without one follow `contextlessPolicy`. |
 
 ---

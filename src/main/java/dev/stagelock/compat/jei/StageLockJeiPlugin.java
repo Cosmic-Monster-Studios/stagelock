@@ -41,7 +41,8 @@ import java.util.Set;
 
 /**
  * Hides locked items, recipes and categories in JEI, applying only the difference on every refresh.
- * Any entry that shows a hidden item or fluid is hidden too (see {@link SlotRule}), whichever mod made it.
+ * Any entry that shows a hidden item or fluid is hidden too (see {@link SlotRule}), whichever mod made it,
+ * and so are the loot pages of mobs the player has yet to kill when the server asks for that.
  */
 @JeiPlugin
 public final class StageLockJeiPlugin implements IModPlugin {
@@ -226,8 +227,11 @@ public final class StageLockJeiPlugin implements IModPlugin {
         Set<Object> hide = identitySet();
         hide.addAll(byIngredient);
         if (active) {
+            boolean mobs = ViewerState.hidesMobEntries();
             recipes.createRecipeLookup(type).includeHidden().get().forEach(recipe -> {
-                if (recipe instanceof RecipeHolder<?> holder && ViewerState.isRecipeHidden(holder)) hide.add(recipe);
+                if (recipe instanceof RecipeHolder<?> holder ? ViewerState.isRecipeHidden(holder) : mobs && ViewerState.isMobEntryHidden(recipe)) {
+                    hide.add(recipe);
+                }
             });
         }
         List<T> toShow = new ArrayList<>();
