@@ -10,6 +10,7 @@ import dev.stagelock.api.restriction.EntityRestriction;
 import dev.stagelock.api.restriction.RegistryMatcher;
 import dev.stagelock.api.restriction.Restriction;
 import dev.stagelock.core.definition.StageDefinitions;
+import dev.stagelock.core.discovery.MobDiscovery;
 import dev.stagelock.core.loot.HasStageCondition;
 import dev.stagelock.core.loot.StagesPredicate;
 import dev.stagelock.core.restriction.RestrictionManager;
@@ -139,5 +140,25 @@ public final class WorldGameTests {
             TestPlayers.remove(player);
         }
         helper.succeed();
+    }
+
+    /** The client learns of a mob one tick after its first kill, when vanilla has awarded the statistic. */
+    @GameTest(template = EMPTY, batch = BATCH)
+    public static void firstKillDiscoversMob(GameTestHelper helper) {
+        ServerPlayer player = TestPlayers.create(helper, GameType.SURVIVAL);
+        helper.assertTrue(MobDiscovery.sentTo(player).isEmpty(), "a new player has killed nothing");
+        var cow = helper.spawn(EntityType.COW, new BlockPos(1, 1, 1));
+        var chicken = helper.spawn(EntityType.CHICKEN, new BlockPos(1, 1, 1));
+        cow.hurt(helper.getLevel().damageSources().playerAttack(player), 1000);
+        chicken.hurt(helper.getLevel().damageSources().generic(), 1000);
+        helper.runAfterDelay(2, () -> {
+            helper.assertTrue(MobDiscovery.sentTo(player).equals(java.util.Set.of(EntityType.COW)),
+                    "expected only the cow to be discovered, got " + MobDiscovery.sentTo(player));
+            // A relog rebuilds the list from the statistics alone.
+            MobDiscovery.syncAll(player);
+            helper.assertTrue(MobDiscovery.sentTo(player).equals(java.util.Set.of(EntityType.COW)), "statistics lost the kill");
+            TestPlayers.remove(player);
+            helper.succeed();
+        });
     }
 }

@@ -2,15 +2,18 @@ package dev.stagelock.client.viewer;
 
 import dev.stagelock.StageLock;
 import dev.stagelock.client.ClientStageCache;
+import dev.stagelock.client.MobDiscoveries;
 import dev.stagelock.core.config.ServerConfig;
 import dev.stagelock.core.restriction.RestrictionManager;
 import dev.stagelock.core.restriction.ViewerHiding;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -21,6 +24,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * fingerprint the same triggers nothing. With no {@code viewer: hide} rules at all, viewers are never
  * refreshed. A real change is debounced, so a burst of grants rebuilds JEI/REI/EMI once. (EMI's
  * refresh is a full reload, so skipping no-op refreshes matters.)
+ * <p>
+ * With {@code viewers.mobLootDiscovery} on and a loot mod installed, the first kill of each mob refreshes too.
  */
 public final class ViewerRefresher {
 
@@ -32,6 +37,8 @@ public final class ViewerRefresher {
     private static volatile ViewerHiding applied = ViewerHiding.NONE;
     private static volatile int countdown = -1;
     private static volatile ServerConfig.RecipeHiding appliedMode = ServerConfig.RecipeHiding.SLOT;
+    /** The killed mobs the viewers reflect, or null while mob loot pages are not being hidden. */
+    private static volatile Set<ResourceLocation> appliedMobs;
 
     private ViewerRefresher() {
     }
@@ -40,6 +47,7 @@ public final class ViewerRefresher {
         NeoForge.EVENT_BUS.addListener(ClientTickEvent.Post.class, e -> tick());
         NeoForge.EVENT_BUS.addListener(ClientPlayerNetworkEvent.LoggingOut.class, e -> {
             applied = ViewerHiding.NONE;
+            appliedMobs = null;
             countdown = -1;
         });
     }
@@ -58,7 +66,12 @@ public final class ViewerRefresher {
     public static void markApplied() {
         applied = current();
         appliedMode = ServerConfig.recipeHiding();
+        appliedMobs = currentMobs();
         countdown = -1;
+    }
+
+    private static Set<ResourceLocation> currentMobs() {
+        return ViewerState.hidesMobEntries() ? MobDiscoveries.get() : null;
     }
 
     private static void tick() {
@@ -66,7 +79,8 @@ public final class ViewerRefresher {
         ViewerHiding now = current();
         ServerConfig.RecipeHiding mode = ServerConfig.recipeHiding();
         boolean modeChanged = mode != appliedMode && !(now.active().isEmpty() && applied.active().isEmpty());
-        if (!modeChanged && !now.changedFrom(applied)) {
+        Set<ResourceLocation> mobs = currentMobs();
+        if (!modeChanged && !now.changedFrom(applied) && java.util.Objects.equals(mobs, appliedMobs)) {
             applied = now;
             countdown = -1;
             return;
@@ -75,6 +89,7 @@ public final class ViewerRefresher {
         if (countdown-- > 0) return;
         applied = now;
         appliedMode = mode;
+        appliedMobs = mobs;
         for (Runnable listener : LISTENERS) {
             try {
                 listener.run();

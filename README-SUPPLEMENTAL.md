@@ -412,6 +412,10 @@ open `config/stagelock-server.toml` in your instance folder and set:*
 
 *Now every page that shows a locked item, even as one option among many, is hidden until the item unlocks.*
 
+**Tip: mob drops that show up after the first kill.** With Just Enough Resources, EMI Loot or Advanced Loot Info
+installed, add `mobLootDiscovery = true` under `[viewers]` in the same file. A mob's loot page then stays hidden
+until the player has killed that mob once. No script is needed.
+
 ### Combining stages
 
 #### 33. Needs two stages

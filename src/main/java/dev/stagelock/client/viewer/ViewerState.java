@@ -4,13 +4,17 @@ import dev.stagelock.api.StageLockAPI;
 import dev.stagelock.api.restriction.ItemAction;
 import dev.stagelock.api.restriction.RestrictionTypes;
 import dev.stagelock.api.restriction.ViewerCategoryRestriction;
+import dev.stagelock.client.MobDiscoveries;
 import dev.stagelock.core.config.ServerConfig;
 import dev.stagelock.core.enforce.Restrictions;
 import dev.stagelock.core.recipe.RecipeGate;
 import dev.stagelock.core.restriction.RestrictionManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.material.Fluid;
@@ -21,6 +25,10 @@ import net.neoforged.neoforge.fluids.FluidStack;
  * integrations; each plugin only translates these answers into its own API.
  */
 public final class ViewerState {
+
+    /** Mobs in this entity type tag always show their loot page, whatever {@code viewers.mobLootDiscovery} says. */
+    public static final TagKey<EntityType<?>> LOOT_ALWAYS_SHOWN = TagKey.create(Registries.ENTITY_TYPE,
+            ResourceLocation.fromNamespaceAndPath("stagelock", "loot_always_shown"));
 
     private ViewerState() {
     }
@@ -61,6 +69,21 @@ public final class ViewerState {
     /** Whether viewer entries should be checked for hidden ingredients at all right now. */
     public static boolean hidesEntries() {
         return active() && RestrictionManager.client().hidesAnythingInViewer();
+    }
+
+    /**
+     * Whether mob loot pages are hidden until their mob is killed (server config {@code viewers.mobLootDiscovery}),
+     * for this player and with a loot mod installed whose pages can be recognised.
+     */
+    public static boolean hidesMobEntries() {
+        return ServerConfig.mobLootDiscovery() && MobEntries.providerLoaded() && active();
+    }
+
+    /** Whether a viewer entry (a JEI recipe, REI display or EMI recipe) is the loot page of a mob the player has not killed yet. */
+    public static boolean isMobEntryHidden(Object entry) {
+        if (!hidesMobEntries()) return false;
+        EntityType<?> mob = MobEntries.mobOf(entry);
+        return mob != null && !MobDiscoveries.has(mob) && !mob.is(LOOT_ALWAYS_SHOWN);
     }
 
     /**

@@ -25,6 +25,7 @@ public final class ServerConfig {
     public static final ModConfigSpec.EnumValue<Policy> UNOWNED_POLICY;
     public static final ModConfigSpec.EnumValue<Policy> CONTEXTLESS_POLICY;
     public static final ModConfigSpec.EnumValue<RecipeHiding> VIEWER_RECIPE_HIDING;
+    public static final ModConfigSpec.BooleanValue VIEWER_MOB_LOOT_DISCOVERY;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -102,6 +103,11 @@ public final class ServerConfig {
                         "STRICT: hide an entry when any slot shows anything hidden, even as one of several options.",
                         "OUTPUT: only hide recipes whose result is hidden (StageLock 0.1.2 and older).")
                 .defineEnum("recipeHiding", RecipeHiding.SLOT);
+        VIEWER_MOB_LOOT_DISCOVERY = builder
+                .comment("Recipe viewers hide a mob's loot page until the player has killed that mob once.",
+                        "Kills are read from the player's vanilla statistics, so mobs killed before this was turned on count.",
+                        "Works with Just Enough Resources, EMI Loot and Advanced Loot Info; without one of them it does nothing.")
+                .define("mobLootDiscovery", false);
         builder.pop();
 
         builder.push("messages");
@@ -129,6 +135,11 @@ public final class ServerConfig {
     /** What a hidden item or fluid hides along with it in recipe viewers. */
     public static RecipeHiding recipeHiding() {
         return SPEC.isLoaded() ? VIEWER_RECIPE_HIDING.get() : RecipeHiding.SLOT;
+    }
+
+    /** Whether recipe viewers hide the loot page of mobs the player has never killed (config {@code viewers.mobLootDiscovery}). */
+    public static boolean mobLootDiscovery() {
+        return SPEC.isLoaded() && VIEWER_MOB_LOOT_DISCOVERY.get();
     }
 
     public enum RecipeHiding {
